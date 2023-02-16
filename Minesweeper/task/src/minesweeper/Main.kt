@@ -11,6 +11,7 @@ fun main() {
     createMinefield(9, 9, numberOfMines)
 }
 
+
 private fun createMinefield(fieldHorizontal: Int, fieldVertical: Int, qtyMines: Int) {
     val safeCells = List(fieldHorizontal * fieldVertical - qtyMines) { Cells.SAFE.cell }
     val minesCells = List(qtyMines) { Cells.MINE.cell }
