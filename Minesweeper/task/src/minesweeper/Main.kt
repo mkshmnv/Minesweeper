@@ -6,7 +6,9 @@ enum class Cells(val cell: Char) {
 }
 
 fun main() {
-    createMinefield(9, 9, 10)
+    print("How many mines do you want on the field? ")
+    val numberOfMines = readln().toInt()
+    createMinefield(9, 9, numberOfMines)
 }
 
 private fun createMinefield(fieldHorizontal: Int, fieldVertical: Int, qtyMines: Int) {
