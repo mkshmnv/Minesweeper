@@ -48,6 +48,7 @@ fun main() {
         }
     }
 
+
     // Print the field
     for (row in field) {
         println(row.joinToString(""))
