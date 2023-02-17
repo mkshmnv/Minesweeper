@@ -9,15 +9,15 @@ enum class Cells(val cell: Char) {
 
 fun main() {
 
-    print("How many mines do you want on the field? ")
     val width = 9
     val height = 9
-    val minesCount = readln().toInt()
-
     val field = Array(height) { CharArray(width) { Cells.SAFE.cell } }
 
+    print("How many mines do you want on the field? ")
+    val qtyMines = readln().toInt()
+
     // Initialize the field with mines
-    repeat(minesCount) {
+    repeat(qtyMines) {
         var row: Int
         var col: Int
         do {
@@ -48,9 +48,18 @@ fun main() {
         }
     }
 
-
     // Print the field
-    for (row in field) {
-        println(row.joinToString(""))
+    printField(field)
+
+}
+
+fun printField(field: Array<CharArray>) {
+    println("""
+         │123456789│
+        —│—————————│
+    """.trimIndent())
+    for ((index, row) in field.withIndex()) {
+        println("${index + 1}│${row.joinToString("")}│")
     }
+    println("—│—————————│")
 }
