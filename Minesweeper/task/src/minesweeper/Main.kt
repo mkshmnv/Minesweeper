@@ -13,107 +13,101 @@ fun main() {
 
     val width = 9
     val height = 9
-    val originalField = List(height) { CharArray(width) { Cells.SAFE.symbol } }
-    val hidedField = List(height) { CharArray(width) { Cells.SAFE.symbol } }
-
+    val fieldOpenMines = List(height) { CharArray(width) { Cells.SAFE.symbol } }
+    val fieldHiddenMines = List(height) { CharArray(width) { Cells.SAFE.symbol } }
 
     print("How many mines do you want on the field? ")
-    val qtyMines = readln().toInt()
+    val numberMines = readln().toInt()
 
-    // Initialize the field with mines
-    repeat(qtyMines) {
+    // Initialize the field with open mines
+    repeat(numberMines) {
         var row: Int
         var col: Int
+
         do {
             row = Random.nextInt(height)
             col = Random.nextInt(width)
-        } while (originalField[row][col] == Cells.MINE.symbol)
-        originalField[row][col] = Cells.MINE.symbol
+        } while (fieldOpenMines[row][col] == Cells.MINE.symbol)
+        fieldOpenMines[row][col] = Cells.MINE.symbol
     }
 
     // Calculate the number of mines around each empty cell
-    for (row in originalField.indices) {
-        for (col in originalField[row].indices) {
-            if (originalField[row][col] == Cells.SAFE.symbol) {
+    for (row in fieldOpenMines.indices) {
+        for (col in fieldOpenMines[row].indices) {
+            if (fieldOpenMines[row][col] == Cells.SAFE.symbol) {
                 var minesCount = 0
                 for (i in -1..1) {
                     for (j in -1..1) {
                         val r = row + i
                         val c = col + j
-                        if (r in 0 until height && c in 0 until width && originalField[r][c] == Cells.MINE.symbol) {
+                        if (r in 0 until height && c in 0 until width && fieldOpenMines[r][c] == Cells.MINE.symbol) {
                             minesCount++
                         }
                     }
                 }
                 if (minesCount > 0) {
-                    originalField[row][col] = '0' + minesCount
+                    fieldOpenMines[row][col] = '0' + minesCount
                 }
             }
         }
     }
 
-    // Initialize the field with mines
-    for ((indexRow, row) in originalField.withIndex()) {
+    // Initialize the field with hidden mines
+    for ((indexRow, row) in fieldOpenMines.withIndex()) {
         for ((indexChar, c) in row.withIndex()) {
             if (c == 'X') {
-                hidedField[indexRow][indexChar] = Cells.SAFE.symbol
+                fieldHiddenMines[indexRow][indexChar] = Cells.SAFE.symbol
             } else {
-                hidedField[indexRow][indexChar] = originalField[indexRow][indexChar]
+                fieldHiddenMines[indexRow][indexChar] = fieldOpenMines[indexRow][indexChar]
             }
         }
     }
 
+    // Start game, player enters two numbers as coordinates on the field
+    game(fieldOpenMines, fieldHiddenMines)
 
+    println("Congratulations! You found all the mines!")
+}
 
-//
-//    println("originalField")
-//    printField(originalField)
-//    println("hidedField")
-//    printField(hidedField)
+fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
+    var x = 0
+    var y = 0
 
-
-
-
-    while (originalField.joinToString {it.joinToString("")}.contains(Cells.MINE.symbol) ) {
-        // Print the field
-        printField(hidedField)
-//        minesMarks(originalField, hidedField)
+    fun inputCoordinates() {
         println("Set/delete mine marks (x and y coordinates): ")
-        val (x, y) = readln().split(" ").map { it.toInt() }
+        val coordinates = readln().split(" ").map { it.toInt() }
+        x = coordinates[0] - 1
+        y = coordinates[1] - 1
+
+        if (fieldOpenMines[x][y] == Cells.MINE.symbol) {
+            fieldOpenMines[x][y] = Cells.MARKED.symbol
+            fieldHiddenMines[x][y] = Cells.MARKED.symbol
+        }
     }
 
+    printField(fieldHiddenMines)
+
+    while (fieldOpenMines.joinToString("").contains(Cells.MINE.symbol)) {
+
+        inputCoordinates()
+        if (fieldOpenMines[x][y].toString().toInt() in 0..9) {
+            println("There is a number here!")
+            inputCoordinates()
+        }
+        printField(fieldHiddenMines)
+    }
 }
 
-fun minesMarks(originalField: List<CharArray>): List<CharArray> {
-//    val coordinates = mutableListOf<Pair<Int, Int>>()
-//
-//    for ((indexRow, row) in originalField.withIndex()) {
-//        for ((indexChar, c) in row.withIndex()) {
-//            if (c == 'X') {
-//                coordinates.add(Pair(indexRow + 1, indexChar + 1))
-//            }
-//        }
-//    }
-
-    println("Set/delete mine marks (x and y coordinates): ")
-    val (x, y) = readln().split(" ").map { it.toInt() }
-//
-//    if (coordinates.contains(Pair(x, y))) {
-//        originalField[x][y] = Cells.MARKED.symbol
-//        coordinates.remove(Pair(x, y))
-//    }
-
-    return originalField
-}
-
-fun printField(originalField: List<CharArray>) {
-    println("""
+fun printField(field: List<CharArray>) {
+    println(
+        """
         
          │123456789│
         —│—————————│
-    """.trimIndent())
+    """.trimIndent()
+    )
 
-    originalField.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
+    field.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
 
     println("—│—————————│")
 }
