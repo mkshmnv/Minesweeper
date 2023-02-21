@@ -6,7 +6,6 @@ enum class Cells(val symbol: Char) {
     MINE('X'),
     MARKED('*'),
     SAFE('.')
-
 }
 
 fun main() {
@@ -75,7 +74,7 @@ fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
 
     fun inputCoordinates() {
         println("Set/delete mine marks (x and y coordinates): ")
-        val coordinates = readln().split(" ").map { it.toInt() }
+        val coordinates = readln().split(" ").map { it.toInt()  }
         x = coordinates[0] - 1
         y = coordinates[1] - 1
 
