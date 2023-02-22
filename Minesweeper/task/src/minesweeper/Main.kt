@@ -3,77 +3,75 @@ package minesweeper
 import kotlin.random.Random
 
 enum class Cells(val symbol: Char) {
+    UNEXPLORED('.'),
+    EXPLORED('/'),
     MINE('X'),
-    MARKED('*'),
-    SAFE('.')
+    MARKED('*')
+
 }
 
-enum class Command(val mark: String) {
+enum class Mark(val command: String) {
     MINE("mine"),
     FREE("free")
 }
 
-fun main() {
+fun Char.repeat(count: Int): String = this.toString().repeat(count)
 
+fun main() {
     val width = 9
     val height = 9
-    val fieldOpenMines = List(height) { CharArray(width) { Cells.SAFE.symbol } }
-    val fieldHiddenMines = List(height) { CharArray(width) { Cells.SAFE.symbol } }
 
     print("How many mines do you want on the field? ")
     val numberMines = readln().toInt()
 
-    // Initialize the field with open mines
-    repeat(numberMines) {
-        var row: Int
-        var col: Int
+    // Initialize with open mines field
+    val fieldOpen = (Cells.EXPLORED.symbol.repeat(width * height - numberMines) +
+            Cells.MINE.symbol.repeat(numberMines))
+        .toList().shuffled()
+        .chunked(width)
+        .map { it.toMutableList() }
 
-        do {
-            row = Random.nextInt(height)
-            col = Random.nextInt(width)
-        } while (fieldOpenMines[row][col] == Cells.MINE.symbol)
-        fieldOpenMines[row][col] = Cells.MINE.symbol
-    }
+    // Initialize with hidden mines field
+    val fieldHidden = Cells.UNEXPLORED.symbol.repeat(width * height)
+        .chunked(width)
+        .map { it.toMutableList() }
+
+
+    printField(fieldOpen)
 
     // Calculate the number of mines around each empty cell
-    for (row in fieldOpenMines.indices) {
-        for (col in fieldOpenMines[row].indices) {
-            if (fieldOpenMines[row][col] == Cells.SAFE.symbol) {
+    for (row in fieldOpen.indices) {
+        for (col in fieldOpen[row].indices) {
+
+            if (fieldOpen[row][col] == Cells.EXPLORED.symbol) {
+
                 var minesCount = 0
+
                 for (i in -1..1) {
                     for (j in -1..1) {
+
                         val r = row + i
                         val c = col + j
-                        if (r in 0 until height && c in 0 until width && fieldOpenMines[r][c] == Cells.MINE.symbol) {
+
+                        if (r in 0 until height && c in 0 until width && fieldOpen[r][c] == Cells.MINE.symbol) {
                             minesCount++
                         }
                     }
                 }
                 if (minesCount > 0) {
-                    fieldOpenMines[row][col] = '0' + minesCount
+                    fieldOpen[row][col] = '0' + minesCount
                 }
             }
         }
     }
 
-    // Initialize the field with hidden mines
-    for ((indexRow, row) in fieldOpenMines.withIndex()) {
-        for ((indexChar, c) in row.withIndex()) {
-            if (c == 'X') {
-                fieldHiddenMines[indexRow][indexChar] = Cells.SAFE.symbol
-            } else {
-                fieldHiddenMines[indexRow][indexChar] = fieldOpenMines[indexRow][indexChar]
-            }
-        }
-    }
-
     // Start game, player enters two numbers as coordinates on the field
-    game(fieldOpenMines, fieldHiddenMines)
+    game(fieldOpen, fieldHidden)
 
     println("Congratulations! You found all the mines!")
 }
 
-fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
+fun game(fieldOpenMines: List<MutableList<Char>>, fieldHiddenMines: List<MutableList<Char>>) {
     var x = 0
     var y = 0
     var mark = ""
@@ -89,22 +87,21 @@ fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
 
     printField(fieldHiddenMines)
 
-//    val a = fieldOpenMines.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol)
-
     while (fieldOpenMines.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol)) {
 
         inputCoordinatesAndState()
         when (mark) {
-            Command.FREE.mark -> {
+            Mark.FREE.command -> {
                 when {
                     fieldOpenMines[x][y].isDigit() -> fieldOpenMines[x][y] = fieldHiddenMines[x][y]
+                    fieldOpenMines[x][y] == Cells.SAFE.symbol -> fieldOpenMines[x][y] = fieldHiddenMines[x][y]
                     fieldOpenMines[x][y] == Cells.MINE.symbol -> {
                         // TODO game over!
                     }
                 }
 
             }
-            Command.MINE.mark -> {
+            Mark.MINE.command -> {
                 when {
                     fieldOpenMines[x][y].isDigit() -> {
                         // TODO when marked mine to number
@@ -125,7 +122,7 @@ fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
     }
 }
 
-fun printField(field: List<CharArray>) {
+fun printField(field: List<List<Char>>) {
     println(
         """
         
