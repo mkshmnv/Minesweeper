@@ -8,7 +8,7 @@ enum class Cells(val symbol: Char) {
     SAFE('.')
 }
 
-enum class Command(mark: String) {
+enum class Command(val mark: String) {
     MINE("mine"),
     FREE("free")
 }
@@ -79,27 +79,47 @@ fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
     var mark = ""
 
     fun inputCoordinatesAndState() {
-        println("Set/unset mine marks or claim a cell as free: ")
+        print("Set/unset mine marks or claim a cell as free: ")
         val nextMove = readln().split(" ")
 
         x = nextMove[0].toInt() - 1
         y = nextMove[1].toInt() - 1
         mark = nextMove[2]
-
-        if (fieldOpenMines[x][y] == Cells.MINE.symbol) {
-            fieldOpenMines[x][y] = Cells.MARKED.symbol
-            fieldHiddenMines[x][y] = Cells.MARKED.symbol
-        }
     }
 
     printField(fieldHiddenMines)
 
-    while (fieldOpenMines.joinToString("").contains(Cells.MINE.symbol)) {
+//    val a = fieldOpenMines.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol)
+
+    while (fieldOpenMines.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol)) {
 
         inputCoordinatesAndState()
-        if (fieldOpenMines[x][y].toString().toInt() in 0..9) {
-            println("There is a number here!")
-            inputCoordinatesAndState()
+        when (mark) {
+            Command.FREE.mark -> {
+                when {
+                    fieldOpenMines[x][y].isDigit() -> fieldOpenMines[x][y] = fieldHiddenMines[x][y]
+                    fieldOpenMines[x][y] == Cells.MINE.symbol -> {
+                        // TODO game over!
+                    }
+                }
+
+            }
+            Command.MINE.mark -> {
+                when {
+                    fieldOpenMines[x][y].isDigit() -> {
+                        // TODO when marked mine to number
+                    }
+                    fieldOpenMines[x][y] == Cells.MINE.symbol -> {
+                        fieldOpenMines[x][y] = Cells.MARKED.symbol
+                        fieldHiddenMines[x][y] = Cells.MARKED.symbol
+                    }
+                }
+            }
+        }
+
+        if (fieldOpenMines[x][y] == Cells.MINE.symbol) {
+            fieldOpenMines[x][y] = Cells.MARKED.symbol
+            fieldHiddenMines[x][y] = Cells.MARKED.symbol
         }
         printField(fieldHiddenMines)
     }
