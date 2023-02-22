@@ -14,13 +14,12 @@ enum class Mark(val command: String) {
     FREE("free")
 }
 
-class Field(val qtyMines: Int = 0, val width: Int = 9, val height: Int = 9) {
+class Field(private val qtyMines: Int = 0, private val width: Int = 9, private val height: Int = 9) {
 
     // coordinates
-    var x = 0
-    var y = 0
-    lateinit var mark: Mark
-    lateinit var currentCell: Cells
+    private var x = 0
+    private var y = 0
+    private lateinit var mark: Mark
 
     private fun Char.repeat(count: Int): String = this.toString().repeat(count)
 
@@ -136,7 +135,7 @@ class Field(val qtyMines: Int = 0, val width: Int = 9, val height: Int = 9) {
 
 fun main() {
     print("How many mines do you want on the field? ")
-    val mines = readln().toInt() // TODO if (NULL)
+    val mines = readln().toInt() // TODO fix if (NULL)
 
     // Initialize field
     val field = Field(mines)
