@@ -8,6 +8,11 @@ enum class Cells(val symbol: Char) {
     SAFE('.')
 }
 
+enum class Command(mark: String) {
+    MINE("mine"),
+    FREE("free")
+}
+
 fun main() {
 
     val width = 9
@@ -71,12 +76,15 @@ fun main() {
 fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
     var x = 0
     var y = 0
+    var mark = ""
 
-    fun inputCoordinates() {
-        println("Set/delete mine marks (x and y coordinates): ")
-        val coordinates = readln().split(" ").map { it.toInt()  }
-        x = coordinates[0] - 1
-        y = coordinates[1] - 1
+    fun inputCoordinatesAndState() {
+        println("Set/unset mine marks or claim a cell as free: ")
+        val nextMove = readln().split(" ")
+
+        x = nextMove[0].toInt() - 1
+        y = nextMove[1].toInt() - 1
+        mark = nextMove[2]
 
         if (fieldOpenMines[x][y] == Cells.MINE.symbol) {
             fieldOpenMines[x][y] = Cells.MARKED.symbol
@@ -88,10 +96,10 @@ fun game(fieldOpenMines: List<CharArray>, fieldHiddenMines: List<CharArray>) {
 
     while (fieldOpenMines.joinToString("").contains(Cells.MINE.symbol)) {
 
-        inputCoordinates()
+        inputCoordinatesAndState()
         if (fieldOpenMines[x][y].toString().toInt() in 0..9) {
             println("There is a number here!")
-            inputCoordinates()
+            inputCoordinatesAndState()
         }
         printField(fieldHiddenMines)
     }
