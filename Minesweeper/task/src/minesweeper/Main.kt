@@ -14,7 +14,12 @@ enum class Mark(val command: String) {
     FREE("free")
 }
 
-class Field(private val qtyMines: Int = 0, private val width: Int = 9, private val height: Int = 9) {
+class Field {
+
+    // Initialize object
+    private var qtyMines: Int = 0
+    private val width: Int = 9
+    private val height: Int = 9
 
     // coordinates
     private var x = 0
@@ -25,6 +30,11 @@ class Field(private val qtyMines: Int = 0, private val width: Int = 9, private v
 
     // Initialize field with open mines
     val open = initField()
+
+    init {
+        print("How many mines do you want on the field? ")
+        qtyMines = readln().toInt() // TODO fix if (NULL)
+    }
 
     private fun initField(): List<MutableList<Char>> {
         val field = (Cells.EXPLORED.symbol.repeat(width * height - qtyMines) + Cells.MINE.symbol.repeat(qtyMines)) // Create string with needed qty chars, with mines and explored marked cells
@@ -134,20 +144,14 @@ class Field(private val qtyMines: Int = 0, private val width: Int = 9, private v
 
 
 fun main() {
-    print("How many mines do you want on the field? ")
-    val mines = readln().toInt() // TODO fix if (NULL)
-
     // Initialize field
-    val field = Field(mines)
+    val field = Field()
 
     // Start game, player enters two numbers as coordinates on the field
-    field.printField()
-
-    while (field.open.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol)) {
-        field.makeMove()
-
+    do {
         field.printField()
-    }
+        field.makeMove()
+    } while (field.open.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol))
 
     println("Congratulations! You found all the mines!")
 }
