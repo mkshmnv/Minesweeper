@@ -26,19 +26,24 @@ class Field {
     private var y: Int = 0
     private lateinit var mark: Mark
 
+    // Inner fields
+    private val open: List<MutableList<Char>>
+    private val hidden: List<MutableList<Char>>
+
     init {
         print("How many mines do you want on the field? ")
         qtyMines = readln().toInt() // TODO fix if (NULL)
 
+        // Set field size
         width = 9
         height = 9
+
+        // Initialize field with open mines
+        open = initField(false)
+
+        // Initialize field with hidden mines
+        hidden = initField(true)
     }
-
-    // Initialize field with open mines
-    private val open = initField(false)
-
-    // Initialize field with hidden mines
-    private val hidden = initField(true)
 
     private fun initField(hidden: Boolean): List<MutableList<Char>> {
         fun Char.repeat(count: Int): String = this.toString().repeat(count)
@@ -91,9 +96,18 @@ class Field {
         x = splitInput[0].toInt()
         y = splitInput[1].toInt()
 
+
+        if (splitInput[2] == "free") {
+            mark = Mark.FREE
+        } else if (splitInput[2] == "mine") {
+            mark = Mark.MINE
+        } else {
+            makeMove()
+        }
+
         // TODO implement all turns varies --- separate code to makeMove and update field
-        when (splitInput[2]) {
-            Mark.FREE.command -> {
+        when (mark) {
+            Mark.FREE -> {
                 mark = Mark.FREE
 
                 when (open[x][y]) {
@@ -108,7 +122,7 @@ class Field {
                 }
             }
 
-            Mark.MINE.command -> {
+            Mark.MINE -> {
                 mark = Mark.MINE
                 when (open[x][y]) {
                     Cells.MINE.symbol -> {
