@@ -16,63 +16,73 @@ enum class Mark(val command: String) {
 
 class Field {
 
-    // Initialize object
-    private var qtyMines: Int = 0
-    private val width: Int = 9
-    private val height: Int = 9
+    // Parameters field
+    private var qtyMines: Int
+    private var width: Int
+    private var height: Int
 
-    // coordinates
-    private var x = 0
-    private var y = 0
+    // Coordinates
+    private var x: Int = 0
+    private var y: Int = 0
     private lateinit var mark: Mark
-
-    private fun Char.repeat(count: Int): String = this.toString().repeat(count)
-
-    // Initialize field with open mines
-    val open = initField()
 
     init {
         print("How many mines do you want on the field? ")
         qtyMines = readln().toInt() // TODO fix if (NULL)
+
+        width = 9
+        height = 9
     }
 
-    private fun initField(): List<MutableList<Char>> {
-        val field = (Cells.EXPLORED.symbol.repeat(width * height - qtyMines) + Cells.MINE.symbol.repeat(qtyMines)) // Create string with needed qty chars, with mines and explored marked cells
-            .toList().shuffled() // shuffled chars
-            .chunked(width) // split string to lists
-            .map { it.toMutableList() }
-
-        // Calculate the number of mines around each empty cell
-        for (row in field.indices)
-        {
-            for (col in field[row].indices) {
-
-                if (field[row][col] == Cells.EXPLORED.symbol) {
-
-                    var minesCount = 0
-
-                    for (i in -1..1) {
-                        for (j in -1..1) {
-
-                            val r = row + i
-                            val c = col + j
-
-                            if (r in 0 until height && c in 0 until width && field[r][c] == Cells.MINE.symbol) {
-                                minesCount++
-                            }
-                        }
-                    }
-                    if (minesCount > 0) field[row][col] = '0' + minesCount
-                }
-            }
-        }
-        return field
-    }
+    // Initialize field with open mines
+    private val open = initField(false)
 
     // Initialize field with hidden mines
-    private val hidden = Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
-        .chunked(width) // split string to lists
-        .map { it.toMutableList() }
+    private val hidden = initField(true)
+
+    private fun initField(hidden: Boolean): List<MutableList<Char>> {
+        fun Char.repeat(count: Int): String = this.toString().repeat(count)
+        return when (hidden) {
+            true -> {
+                Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
+                    .chunked(width) // split string to lists
+                    .map { it.toMutableList() }
+            }
+
+            false -> {
+                val field =
+                    (Cells.EXPLORED.symbol.repeat(width * height - qtyMines) + Cells.MINE.symbol.repeat(qtyMines)) // Create string with needed qty chars, with mines and explored marked cells
+                        .toList().shuffled() // shuffled chars
+                        .chunked(width) // split string to lists
+                        .map { it.toMutableList() }
+
+                // Calculate the number of mines around each empty cell
+                for (row in field.indices) {
+                    for (col in field[row].indices) {
+
+                        if (field[row][col] == Cells.EXPLORED.symbol) {
+
+                            var minesCount = 0
+
+                            for (i in -1..1) {
+                                for (j in -1..1) {
+
+                                    val r = row + i
+                                    val c = col + j
+
+                                    if (r in 0 until height && c in 0 until width && field[r][c] == Cells.MINE.symbol) {
+                                        minesCount++
+                                    }
+                                }
+                            }
+                            if (minesCount > 0) field[row][col] = '0' + minesCount
+                        }
+                    }
+                }
+                field
+            }
+        }
+    }
 
     fun makeMove() {
         print("Set/unset mine marks or claim a cell as free: ")
@@ -91,11 +101,13 @@ class Field {
                         println("You stepped on a mine and failed!")
                         exitProcess(0)
                     }
+
                     Cells.MARKED.symbol -> {}
                     Cells.EXPLORED.symbol -> {}
                     Cells.UNEXPLORED.symbol -> {}
                 }
             }
+
             Mark.MINE.command -> {
                 mark = Mark.MINE
                 when (open[x][y]) {
@@ -103,6 +115,7 @@ class Field {
                         open[x][y] = Cells.MARKED.symbol
                         hidden[x][y] = Cells.MARKED.symbol
                     }
+
                     Cells.MARKED.symbol -> {}
                     Cells.EXPLORED.symbol -> {}
                     Cells.UNEXPLORED.symbol -> {}
@@ -139,8 +152,15 @@ class Field {
 
         println("—│—————————│")
     }
-}
 
+    fun continueGame(): Boolean {
+        val openFieldToString = open.joinToString("") { it.joinToString("") }
+        val hiddenFieldToString = hidden.joinToString("") { it.joinToString("") }
+
+        return openFieldToString.contains(Cells.MINE.symbol) ||
+                openFieldToString.filter { it == Cells.UNEXPLORED.symbol } != hiddenFieldToString.filter { it == Cells.MINE.symbol }
+    }
+}
 
 
 fun main() {
@@ -151,7 +171,7 @@ fun main() {
     do {
         field.printField()
         field.makeMove()
-    } while (field.open.joinToString("") { it.joinToString("") }.contains(Cells.MINE.symbol))
+    } while (field.continueGame())
 
     println("Congratulations! You found all the mines!")
 }
