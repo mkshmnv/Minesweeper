@@ -47,13 +47,25 @@ class Field {
         fieldExternal = initField(true)
     }
 
-    private fun initField(hidden: Boolean): List<MutableList<Char>> {
+    private fun initField(isHidden: Boolean): List<MutableList<Char>> {
         fun Char.repeat(count: Int): String = this.toString().repeat(count)
-        return when (hidden) {
+
+        var firstString = " │"
+        var lastString = "—│"
+
+        val resultField : MutableList<MutableList<Char>> = when (isHidden) {
             true -> {
-                Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
+                val field = Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
                     .chunked(width) // split string to lists
-                    .map { it.toMutableList() }
+                    .map { it.toMutableList() }.toMutableList()
+
+                for ((index, row) in field.withIndex()) {
+                    row.add(0, '1' + index)
+                    row.add(1, '│')
+                    row.add('│')
+                }
+
+                field
             }
 
             false -> {
@@ -61,7 +73,7 @@ class Field {
                     (Cells.EXPLORED.symbol.repeat(width * height - qtyMines) + Cells.MINE.symbol.repeat(qtyMines)) // Create string with needed qty chars, with mines and explored marked cells
                         .toList().shuffled() // shuffled chars
                         .chunked(width) // split string to lists
-                        .map { it.toMutableList() }
+                        .map { it.toMutableList() }.toMutableList()
 
                 // Calculate the number of mines around each empty cell
                 for (row in field.indices) {
@@ -86,9 +98,25 @@ class Field {
                         }
                     }
                 }
+
+                for ((index, row) in field.withIndex()) {
+                    row.add(0, '1' + index)
+                    row.add(1, '│')
+                    row.add('│')
+                }
+
                 field
             }
         }
+
+        (1..width).forEach { firstString += it.toString() }
+
+        (1..width).forEach { lastString += "—" }
+
+        resultField.add(0, ("$firstString│").toMutableList())
+        resultField.add(1, ("$lastString│").toMutableList())
+        resultField.add(("$lastString│").toMutableList())
+        return resultField
     }
 
     fun makeMove() {
@@ -142,6 +170,16 @@ class Field {
                             // If free cell is unexplored
                             // TODO open all around cells
                             fieldExternal[x][y] = Cells.EXPLORED.symbol
+
+                            // Calculate the number of mines around each empty cell
+//                            for (i in x - 1..x + 1) {
+//                                for (j in y - 1..y + 1) {
+//                                    if (fieldInternal[i][j] == Cells.EXPLORED.symbol) {
+//                                        fieldExternal[i][j] = Cells.EXPLORED.symbol
+//                                    }
+//                                }
+//                            }
+
                         }
                     }
 
@@ -178,32 +216,14 @@ class Field {
     }
 
     fun printField() {
-        println(
-            """
-        
-         │123456789│
-        —│—————————│
-    """.trimIndent()
-        )
-
-        fieldExternal.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
-
-        println("—│—————————│")
+        println("")
+        fieldExternal.forEachIndexed { index, row -> println(row.joinToString("")) }
     }
 
     // TODO DELETE FOR TESTS
-    fun printOpenField() {
-        println(
-            """
-        
-         │123456789│
-        —│—————————│
-    """.trimIndent()
-        )
-
-        fieldInternal.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
-
-        println("—│—————————│")
+    fun printInternalField() {
+        println("")
+        fieldInternal.forEachIndexed { index, row -> println(row.joinToString("")) }
     }
 
     fun continueGame(): Boolean {
@@ -213,7 +233,8 @@ class Field {
 
         return if (openFieldToString.contains(Cells.MINE.symbol) ||
             openFieldToString.filter { it == Cells.UNEXPLORED.symbol } !=
-            hiddenFieldToString.filter { it == Cells.MINE.symbol }) {
+            hiddenFieldToString.filter { it == Cells.MINE.symbol }
+        ) {
             true
         } else {
             println("Congratulations! You found all the mines!")
@@ -229,7 +250,7 @@ fun main() {
     // Start game where player enters two numbers as coordinates and command on the field
     do {
         field.printField()
-        field.printOpenField()
+        field.printInternalField()
         field.makeMove()
     } while (field.continueGame())
 
