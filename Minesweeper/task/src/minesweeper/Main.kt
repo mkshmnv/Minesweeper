@@ -27,8 +27,8 @@ class Field {
     private lateinit var mark: Mark
 
     // Inner fields
-    private val open: List<MutableList<Char>>
-    private val hidden: List<MutableList<Char>>
+    private val fieldInternal: List<MutableList<Char>>
+    private val fieldExternal: List<MutableList<Char>>
 
     init {
         print("How many mines do you want on the field? ")
@@ -41,10 +41,10 @@ class Field {
         height = 9
 
         // Initialize field with open mines
-        open = initField(false)
+        fieldInternal = initField(false)
 
         // Initialize field with hidden mines
-        hidden = initField(true)
+        fieldExternal = initField(true)
     }
 
     private fun initField(hidden: Boolean): List<MutableList<Char>> {
@@ -111,12 +111,12 @@ class Field {
             Mark.FREE -> {
                 when {
                     // If stepped on a mine
-                    open[x][y] == Cells.MINE.symbol -> {
+                    fieldInternal[x][y] == Cells.MINE.symbol -> {
 
-                        open.forEachIndexed { indexRow, row ->
+                        fieldInternal.forEachIndexed { indexRow, row ->
                             row.forEachIndexed { indexCell, cell ->
                                 if (cell == Cells.MINE.symbol) {
-                                    hidden[indexRow][indexCell] = Cells.MINE.symbol
+                                    fieldExternal[indexRow][indexCell] = Cells.MINE.symbol
                                 }
                             }
                         }
@@ -129,30 +129,30 @@ class Field {
                     }
 
                     // If stepped on a marked cell
-                    open[x][y] == Cells.MARKED.symbol -> {
+                    fieldInternal[x][y] == Cells.MARKED.symbol -> {
                         makeMove()
                     }
 
                     // If stepped on a free cell
-                    open[x][y] == Cells.EXPLORED.symbol -> {
-                        if (hidden[x][y] == Cells.EXPLORED.symbol) {
+                    fieldInternal[x][y] == Cells.EXPLORED.symbol -> {
+                        if (fieldExternal[x][y] == Cells.EXPLORED.symbol) {
                             // If free cell already explored
                             makeMove()
                         } else {
                             // If free cell is unexplored
                             // TODO open all around cells
-                            hidden[x][y] = Cells.EXPLORED.symbol
+                            fieldExternal[x][y] = Cells.EXPLORED.symbol
                         }
                     }
 
                     // If cell is a digit
-                    open[x][y].isDigit() -> {
-                        if (hidden[x][y].isDigit()) {
+                    fieldInternal[x][y].isDigit() -> {
+                        if (fieldExternal[x][y].isDigit()) {
                             // If digit already open
                             makeMove()
                         } else {
                             // If digit isn't open
-                            hidden[x][y] = open[x][y]
+                            fieldExternal[x][y] = fieldInternal[x][y]
                         }
                     }
                 }
@@ -160,17 +160,17 @@ class Field {
 
             // When command set or unset mines marks
             Mark.MINE -> {
-                if (hidden[x][y] == Cells.UNEXPLORED.symbol) {
-                    hidden[x][y] = Cells.MARKED.symbol
+                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol) {
+                    fieldExternal[x][y] = Cells.MARKED.symbol
 
-                    if (open[x][y] == Cells.MINE.symbol) {
-                        open[x][y] = Cells.MARKED.symbol
+                    if (fieldInternal[x][y] == Cells.MINE.symbol) {
+                        fieldInternal[x][y] = Cells.MARKED.symbol
                     }
-                } else if (hidden[x][y] == Cells.MARKED.symbol) {
-                    hidden[x][y] = Cells.UNEXPLORED.symbol
+                } else if (fieldExternal[x][y] == Cells.MARKED.symbol) {
+                    fieldExternal[x][y] = Cells.UNEXPLORED.symbol
 
-                    if (open[x][y] == Cells.MARKED.symbol) {
-                        open[x][y] = Cells.MINE.symbol
+                    if (fieldInternal[x][y] == Cells.MARKED.symbol) {
+                        fieldInternal[x][y] = Cells.MINE.symbol
                     }
                 }
             }
@@ -186,7 +186,7 @@ class Field {
     """.trimIndent()
         )
 
-        hidden.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
+        fieldExternal.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
 
         println("—│—————————│")
     }
@@ -201,15 +201,15 @@ class Field {
     """.trimIndent()
         )
 
-        open.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
+        fieldInternal.forEachIndexed { index, row -> println("${index + 1}│${row.joinToString("")}│") }
 
         println("—│—————————│")
     }
 
     fun continueGame(): Boolean {
 
-        val openFieldToString = open.joinToString("") { it.joinToString("") }
-        val hiddenFieldToString = hidden.joinToString("") { it.joinToString("") }
+        val openFieldToString = fieldInternal.joinToString("") { it.joinToString("") }
+        val hiddenFieldToString = fieldExternal.joinToString("") { it.joinToString("") }
 
         return if (openFieldToString.contains(Cells.MINE.symbol) ||
             openFieldToString.filter { it == Cells.UNEXPLORED.symbol } !=
@@ -221,7 +221,6 @@ class Field {
         }
     }
 }
-
 
 fun main() {
     // Initialize field
