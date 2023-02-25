@@ -123,8 +123,8 @@ class Field {
         print("Set/unset mine marks or claim a cell as free: ")
         val splitInput = readln().split(" ")
 
-        x = splitInput[1].toInt() - 1
-        y = splitInput[0].toInt() - 1
+        x = splitInput[1].toInt() + 1
+        y = splitInput[0].toInt() + 1
 
         if (splitInput[2] == "free") {
             mark = Mark.FREE
@@ -169,16 +169,26 @@ class Field {
                         } else {
                             // If free cell is unexplored
                             // TODO open all around cells
-                            fieldExternal[x][y] = Cells.EXPLORED.symbol
+//                            fieldExternal[x][y] = Cells.EXPLORED.symbol
 
                             // Calculate the number of mines around each empty cell
-//                            for (i in x - 1..x + 1) {
-//                                for (j in y - 1..y + 1) {
-//                                    if (fieldInternal[i][j] == Cells.EXPLORED.symbol) {
-//                                        fieldExternal[i][j] = Cells.EXPLORED.symbol
-//                                    }
-//                                }
+
+//                            fun openAround() {
+                                for (i in x - 1..x + 1) {
+                                    for (j in y - 1..y + 1) {
+                                        if (fieldInternal[i][j].isDigit()) fieldExternal[i][j] = fieldInternal[i][j]
+
+                                        if (fieldInternal[i][j] == Cells.EXPLORED.symbol) {
+                                            fieldExternal[i][j] = fieldInternal[i][j]
+//                                            x = i
+//                                            y = j
+//                                            openAround()
+                                        }
+                                    }
+                                }
 //                            }
+
+//                            openAround()
 
                         }
                     }
