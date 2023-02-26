@@ -27,7 +27,7 @@ class Field {
     private lateinit var mark: Mark
 
     // Inner fields
-    private val fieldInternal: List<MutableList<Char>>
+    private val fieldInternal: List<List<Char>>
     private val fieldExternal: List<MutableList<Char>>
 
     init {
@@ -53,11 +53,12 @@ class Field {
         var firstString = " │"
         var lastString = "—│"
 
-        val resultField : MutableList<MutableList<Char>> = when (isHidden) {
+        val resultField: MutableList<MutableList<Char>> = when (isHidden) {
             true -> {
-                val field = Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
-                    .chunked(width) // split string to lists
-                    .map { it.toMutableList() }.toMutableList()
+                val field =
+                    Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
+                        .chunked(width) // split string to lists
+                        .map { it.toMutableList() }.toMutableList()
 
                 for ((index, row) in field.withIndex()) {
                     row.add(0, '1' + index)
@@ -169,38 +170,32 @@ class Field {
                         } else {
                             // If free cell is unexplored
                             // TODO open all around cells
-//                            fieldExternal[x][y] = Cells.EXPLORED.symbol
-
-                            // Calculate the number of mines around each empty cell
-
 
                             fun openAround(x: Int, y: Int) {
-                                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol && fieldInternal[x][y] != Cells.MINE.symbol) {
+                                println("Now cheking x: ${x - 1}, y: ${y - 1} -> ${fieldInternal[x][y]} ")
+                                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol) {
                                     fieldExternal[x][y] = fieldInternal[x][y]
+                                    for (i in -1..1) {
+                                        for (j in -1..1) {
+                                            if (!(i == 0 && j == 0)) {
+                                                val c = x - i
+                                                val r = y - j
+                                                println("next x: ${c - 1}, y: ${r - 1} -> inter ${fieldInternal[c][r]} exter ${fieldExternal[c][r]}")
 
-                                    if (fieldExternal[x][y - 1] == Cells.UNEXPLORED.symbol) {
-                                        openAround(x, y - 1)
-                                    }
-                                    if (fieldExternal[x - 1][y] == Cells.UNEXPLORED.symbol) {
-                                        openAround(x - 1, y)
-                                    }
-
-                                    if (fieldExternal[x + 1][y] == Cells.UNEXPLORED.symbol) {
-                                        openAround(x + 1, y)
-                                    }
-
-                                    if (fieldExternal[x][y + 1] == Cells.UNEXPLORED.symbol) {
-                                        openAround(x, y + 1)
+                                                if (!fieldInternal[c][r].isDigit()) {
+                                                    fieldExternal[c][r] = fieldInternal[c][r]
+                                                    fieldInternal[c][r] = fieldExternal[c][r]
+                                                } else if (fieldInternal[c][r] == Cells.EXPLORED.symbol) {
+                                                    fieldExternal[c][r] = fieldInternal[c][r]
+                                                    openAround(c, r)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
 
                             openAround(x, y)
-//                            openAround(x, y - 1)
-//                            openAround(x - 1, y)
-//                            openAround(x + 1, y)
-//                            openAround(x, y + 1)
-
                         }
                     }
 
