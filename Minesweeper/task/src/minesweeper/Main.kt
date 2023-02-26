@@ -173,22 +173,33 @@ class Field {
 
                             // Calculate the number of mines around each empty cell
 
-//                            fun openAround() {
-                                for (i in x - 1..x + 1) {
-                                    for (j in y - 1..y + 1) {
-                                        if (fieldInternal[i][j].isDigit()) fieldExternal[i][j] = fieldInternal[i][j]
 
-                                        if (fieldInternal[i][j] == Cells.EXPLORED.symbol) {
-                                            fieldExternal[i][j] = fieldInternal[i][j]
-//                                            x = i
-//                                            y = j
-//                                            openAround()
-                                        }
+                            fun openAround(x: Int, y: Int) {
+                                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol && fieldInternal[x][y] != Cells.MINE.symbol) {
+                                    fieldExternal[x][y] = fieldInternal[x][y]
+
+                                    if (fieldExternal[x][y - 1] == Cells.UNEXPLORED.symbol) {
+                                        openAround(x, y - 1)
+                                    }
+                                    if (fieldExternal[x - 1][y] == Cells.UNEXPLORED.symbol) {
+                                        openAround(x - 1, y)
+                                    }
+
+                                    if (fieldExternal[x + 1][y] == Cells.UNEXPLORED.symbol) {
+                                        openAround(x + 1, y)
+                                    }
+
+                                    if (fieldExternal[x][y + 1] == Cells.UNEXPLORED.symbol) {
+                                        openAround(x, y + 1)
                                     }
                                 }
-//                            }
+                            }
 
-//                            openAround()
+                            openAround(x, y)
+//                            openAround(x, y - 1)
+//                            openAround(x - 1, y)
+//                            openAround(x + 1, y)
+//                            openAround(x, y + 1)
 
                         }
                     }
@@ -260,7 +271,7 @@ fun main() {
     // Start game where player enters two numbers as coordinates and command on the field
     do {
         field.printField()
-        field.printInternalField()
+//        field.printInternalField()
         field.makeMove()
     } while (field.continueGame())
 
