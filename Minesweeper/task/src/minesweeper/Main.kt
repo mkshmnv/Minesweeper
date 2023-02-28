@@ -22,8 +22,8 @@ class Field {
     private var height: Int
 
     // Coordinates
-    private var y: Int = 0
     private var x: Int = 0
+    private var y: Int = 0
     private lateinit var mark: Mark
 
     // Inner fields
@@ -123,17 +123,18 @@ class Field {
 
     fun makeMove() {
         print("Set/unset mine marks or claim a cell as free: ")
-        val splitInput = readln().split(" ")
+        val (xString, yString, toDo) = readln().split(" ")
 
-        x = splitInput[0].toInt() + 1
-        y = splitInput[1].toInt() + 1
+        x = xString.toInt() + 1
+        y = yString.toInt() + 1
 
-        if (splitInput[2] == "free") {
-            mark = Mark.FREE
-        } else if (splitInput[2] == "mine") {
-            mark = Mark.MINE
-        } else {
-            makeMove()
+        // TODO delete Mark enum class
+        when (toDo) {
+            "free" -> {
+                mark = Mark.FREE
+            }
+            "mine" -> mark = Mark.MINE
+            else -> makeMove()
         }
 
         when (mark) {
@@ -141,7 +142,7 @@ class Field {
             Mark.FREE -> {
                 when {
                     // If stepped on a mine
-                    fieldInternal[y][x] == Cells.MINE.symbol -> {
+                    fieldInternal[x][y] == Cells.MINE.symbol -> {
 
                         fieldInternal.forEachIndexed { indexRow, row ->
                             row.forEachIndexed { indexCell, cell ->
@@ -151,7 +152,7 @@ class Field {
                             }
                         }
 
-                        printField()
+                        printField(true)
 
                         println("You stepped on a mine and failed!")
 
@@ -159,13 +160,13 @@ class Field {
                     }
 
                     // If stepped on a marked cell
-                    fieldInternal[y][x] == Cells.MARKED.symbol -> {
+                    fieldInternal[x][y] == Cells.MARKED.symbol -> {
                         makeMove()
                     }
 
                     // If stepped on a free cell
-                    fieldInternal[y][x] == Cells.FREE.symbol -> {
-                        if (fieldExternal[y][x] == Cells.FREE.symbol) {
+                    fieldInternal[x][y] == Cells.FREE.symbol -> {
+                        if (fieldExternal[x][y] == Cells.FREE.symbol) {
                             // If free cell already explored
                             makeMove()
                         } else {
@@ -202,7 +203,7 @@ class Field {
                                 }
                             }
 
-                            openAroundCell(x, y)
+                            openAroundCell(y, x)
 
 
 
@@ -243,18 +244,18 @@ class Field {
 //                            click()
 
 
-                            printField()
+                            printField(true)
                         }
                     }
 
                     // If cell is a digit
-                    fieldInternal[y][x].isDigit() -> {
-                        if (fieldExternal[y][x].isDigit()) {
+                    fieldInternal[x][y].isDigit() -> {
+                        if (fieldExternal[x][y].isDigit()) {
                             // If digit already open
                             makeMove()
                         } else {
                             // If digit isn't open
-                            fieldExternal[y][x] = fieldInternal[y][x]
+                            fieldExternal[x][y] = fieldInternal[x][y]
                         }
                     }
                 }
@@ -262,32 +263,31 @@ class Field {
 
             // When command set or unset mines marks
             Mark.MINE -> {
-                if (fieldExternal[y][x] == Cells.UNEXPLORED.symbol) {
-                    fieldExternal[y][x] = Cells.MARKED.symbol
+                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol) {
+                    fieldExternal[x][y] = Cells.MARKED.symbol
 
-                    if (fieldInternal[y][x] == Cells.MINE.symbol) {
-                        fieldInternal[y][x] = Cells.MARKED.symbol
+                    if (fieldInternal[x][y] == Cells.MINE.symbol) {
+                        fieldInternal[x][y] = Cells.MARKED.symbol
                     }
-                } else if (fieldExternal[y][x] == Cells.MARKED.symbol) {
-                    fieldExternal[y][x] = Cells.UNEXPLORED.symbol
+                } else if (fieldExternal[x][y] == Cells.MARKED.symbol) {
+                    fieldExternal[x][y] = Cells.UNEXPLORED.symbol
 
-                    if (fieldInternal[y][x] == Cells.MARKED.symbol) {
-                        fieldInternal[y][x] = Cells.MINE.symbol
+                    if (fieldInternal[x][y] == Cells.MARKED.symbol) {
+                        fieldInternal[x][y] = Cells.MINE.symbol
                     }
                 }
             }
         }
     }
 
-    fun printField() {
+    fun printField(external: Boolean) {
         println("")
-        fieldExternal.forEachIndexed { index, row -> println(row.joinToString("")) }
-    }
+        if (external) {
+            fieldExternal.forEachIndexed { _, row -> println(row.joinToString("")) }
+        } else {
+            fieldInternal.forEachIndexed { _, row -> println(row.joinToString("")) }
+        }
 
-    // TODO DELETE FOR TESTS
-    fun printInternalField() {
-        println("")
-        fieldInternal.forEachIndexed { index, row -> println(row.joinToString("")) }
     }
 
     fun continueGame(): Boolean {
@@ -313,8 +313,8 @@ fun main() {
 
     // Start game where player enters two numbers as coordinates and command on the field
     do {
-        field.printField()
-        field.printInternalField()
+        field.printField(true)
+        field.printField(false) // check i
         field.makeMove()
     } while (field.continueGame())
 
