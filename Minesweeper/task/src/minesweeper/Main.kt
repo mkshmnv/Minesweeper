@@ -132,7 +132,19 @@ class Field {
         when (toDo) {
             "free" -> {
                 mark = Mark.FREE
-            }
+
+                if (fieldInternal[x][y] == Cells.MINE.symbol) {
+                    printField(true)
+                    println("You stepped on a mine and failed!")
+                    exitProcess(0)
+                }
+
+                fieldExternal[x][y] = fieldInternal[x][y]
+                openCells(x, y)
+
+                done = gameOverAllMarked() || gameOverAllShown()
+
+            } // When command is free
             "mine" -> {
                 when (fieldInternal[x][y]) {
                     in "12345678" -> {
@@ -148,12 +160,12 @@ class Field {
                         fieldExternal[x][y] = Cells.UNEXPLORED.symbol
                     }
                 }
-            }
+            } // When command set or unset mines marks
             else -> makeMove()
         }
 
         when (mark) {
-            // When command is free
+
             Mark.FREE -> {
                 when {
                     // If stepped on a mine
@@ -276,25 +288,6 @@ class Field {
                 }
             }
 
-            // When command set or unset mines marks
-            Mark.MINE -> {
-
-
-
-                if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol) {
-                    fieldExternal[x][y] = Cells.MARKED.symbol
-
-                    if (fieldInternal[x][y] == Cells.MINE.symbol) {
-                        fieldInternal[x][y] = Cells.MARKED.symbol
-                    }
-                } else if (fieldExternal[x][y] == Cells.MARKED.symbol) {
-                    fieldExternal[x][y] = Cells.UNEXPLORED.symbol
-
-                    if (fieldInternal[x][y] == Cells.MARKED.symbol) {
-                        fieldInternal[x][y] = Cells.MINE.symbol
-                    }
-                }
-            }
         }
     }
 
