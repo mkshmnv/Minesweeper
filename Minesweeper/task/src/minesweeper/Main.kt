@@ -125,15 +125,30 @@ class Field {
         print("Set/unset mine marks or claim a cell as free: ")
         val (xString, yString, toDo) = readln().split(" ")
 
-        x = xString.toInt() + 1
-        y = yString.toInt() + 1
+        x = yString.toInt() + 1
+        y = xString.toInt() + 1
 
         // TODO delete Mark enum class
         when (toDo) {
             "free" -> {
                 mark = Mark.FREE
             }
-            "mine" -> mark = Mark.MINE
+            "mine" -> {
+                when (fieldInternal[x][y]) {
+                    in "12345678" -> {
+                        println("There is a number here!")
+                        makeMove()
+                    }
+
+                    Cells.UNEXPLORED.symbol -> {
+                        fieldExternal[x][y] = Cells.MARKED.symbol
+                    }
+
+                    Cells.MARKED.symbol -> {
+                        fieldExternal[x][y] = Cells.UNEXPLORED.symbol
+                    }
+                }
+            }
             else -> makeMove()
         }
 
@@ -263,6 +278,9 @@ class Field {
 
             // When command set or unset mines marks
             Mark.MINE -> {
+
+
+
                 if (fieldExternal[x][y] == Cells.UNEXPLORED.symbol) {
                     fieldExternal[x][y] = Cells.MARKED.symbol
 
