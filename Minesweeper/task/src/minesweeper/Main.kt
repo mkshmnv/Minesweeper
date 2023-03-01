@@ -2,14 +2,13 @@ package minesweeper
 
 import kotlin.system.exitProcess
 
-enum class Cells(val symbol: Char) {
-    UNEXPLORED('.'),
-    FREE('/'),
-    MINE('X'),
-    MARKED('*')
-}
-
 class Field {
+    enum class Cells(val symbol: Char) {
+        UNEXPLORED('.'),
+        FREE('/'),
+        MINE('X'),
+        MARKED('*')
+    }
 
     // Set parameters field
     private var width: Int = 9
@@ -236,30 +235,22 @@ class Field {
     } // Show field
 
     fun continueGame(): Boolean {
-        // If even one mine is unmarked
-        for (i in 0..width) {
-            for (j in 0..height) {
-                if ((fieldExternal[i][j] == Cells.MARKED.symbol && fieldInternal[i][j] != Cells.MINE.symbol) ||
-                    (fieldExternal[i][j] != Cells.MARKED.symbol && fieldInternal[i][j] == Cells.MINE.symbol)
-                ) return true
+        // If even one mine is unmarked TODO fix continue
+        if (fieldExternal.joinToString { it.joinToString("") }.count { it == Cells.MARKED.symbol } == numbersMines) {
+            for ((rowIndex, row) in fieldInternal.withIndex()) {
+                for (colIndex in row.indices) {
+                    return if (fieldExternal[rowIndex][colIndex] == Cells.MARKED.symbol &&
+                        fieldInternal[rowIndex][colIndex] != Cells.MARKED.symbol) {
+                        true
+                    } else {
+                        printField(false)
+                        println("Congratulations! You found all the mines!")
+                        false
+                    }
+                }
             }
         }
-
-        if (fieldInternal.joinToString { it.joinToString("") }.contains(Cells.MINE.symbol) ) {
-            println("Congratulations! You found all the mines!")
-            return false
-        }
-
-        return false
-
-        //
-        for (i in 0..width){
-            for (j in 0..height) {
-                if (fieldInternal[i][j] == 'X') continue
-                if (fieldInternal[i][j] != fieldExternal[i][j]) return true
-            }
-        }
-
+        return true
     }
 }
 
