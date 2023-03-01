@@ -1,5 +1,6 @@
 package minesweeper
 
+import kotlin.coroutines.coroutineContext
 import kotlin.system.exitProcess
 
 enum class Cells(val symbol: Char) {
@@ -12,11 +13,11 @@ enum class Cells(val symbol: Char) {
 class Field {
 
     // Parameters field
-    private var qtyMines: Int
     private var width: Int
     private var height: Int
+    private var qtyMines: Int
 
-    // Coordinates
+    // Coordinates cells
     private var x: Int = 0
     private var y: Int = 0
 
@@ -42,6 +43,7 @@ class Field {
         fieldExternal = initField(true)
     }
 
+    // Creating fields with mines
     private fun initField(internal: Boolean): List<MutableList<Char>> {
         fun Char.repeat(count: Int): String = this.toString().repeat(count)
 
@@ -117,22 +119,14 @@ class Field {
 
     fun makeMove() {
         print("Set/unset mine marks or claim a cell as free: ")
-        val (xString, yString, toDo) = readln().split(" ")
+        val (xInput, yInput, action) = readln().split(" ")
 
-        x = yString.toInt() + 1
-        y = xString.toInt() + 1
+        x = yInput.toInt() + 1
+        y = xInput.toInt() + 1
 
-        // TODO delete Mark enum class
-        when (toDo) {
+        when (action) {
+            // When command is free
             "free" -> {
-
-                // Stepped on a mine
-                if (fieldInternal[x][y] == Cells.MINE.symbol) {
-                    printField(false)
-                    println("You stepped on a mine and failed!")
-                    exitProcess(0)
-                }
-
                 // Stepped on a marked cell
                 if (fieldInternal[x][y] == Cells.MARKED.symbol) {
                     makeMove()
@@ -151,22 +145,37 @@ class Field {
 
                 // Stepped on a free cell
                 if (fieldInternal[x][y] == Cells.FREE.symbol) {
-                    if (fieldExternal[x][y] == Cells.FREE.symbol) {
-                        // If free cell already explored
-                        makeMove()
-                    } else {
-                        // TODO open free cells implement fun openCells()
-//                        openCells(x, y)
-                    }
+                    // If free cell already explored
+                    if (fieldExternal[x][y] == Cells.FREE.symbol) makeMove()
+
+                    // Open all cells around
+                    fieldExternal[x][y] = fieldInternal[x][y]
+                    openCells(x,y)
+
                     printField(false)
                 }
 
-//                done = gameOverAllMarked() || gameOverAllShown()
+                // Stepped on a mine
+                if (fieldInternal[x][y] == Cells.MINE.symbol) {
+
+                    // Show all mines on field
+                    for ((xRow, row) in fieldInternal.withIndex()) {
+                        for ((yCol, cell) in row.withIndex()) {
+                            if (cell == Cells.MINE.symbol) fieldExternal[xRow][yCol] = Cells.MINE.symbol
+                        }
+                    }
+
+                    printField(false)
+
+                    println("You stepped on a mine and failed!")
+                    exitProcess(0)
+                }
 
             } // When command is free
 
+            // Command set or unset mines marks
             "mine" -> {
-                when (fieldInternal[x][y]) {
+                when (fieldExternal[x][y]) {
                     in "12345678" -> {
                         println("There is a number here!")
                         makeMove()
@@ -174,10 +183,12 @@ class Field {
 
                     Cells.UNEXPLORED.symbol -> {
                         fieldExternal[x][y] = Cells.MARKED.symbol
+                        if (fieldInternal[x][y] == Cells.MINE.symbol) fieldInternal[x][y] = Cells.MARKED.symbol
                     }
 
                     Cells.MARKED.symbol -> {
                         fieldExternal[x][y] = Cells.UNEXPLORED.symbol
+                        if (fieldInternal[x][y] == Cells.MARKED.symbol) fieldInternal[x][y] = Cells.MINE.symbol
                     }
                 }
             } // Command set or unset mines marks
@@ -186,30 +197,71 @@ class Field {
         }
     }
 
+    // Chosen free cell open all cells around
+    private fun openCells(x: Int, y: Int) {
+        // Init cells around chosen cell
+        val north = x - 1
+        val south = x + 1
+        val east = y + 1
+        val west = y - 1
+
+        // Around cells have safe cells? Open them all
+        fun repeatOpenCells (x: Int, y: Int) {
+            if (fieldInternal[x][y] == Cells.MINE.symbol ||
+                fieldExternal[x][y] == Cells.FREE.symbol ||
+                fieldExternal[x][y].isDigit()
+                ) return
+
+            fieldExternal[x][y] = fieldInternal[x][y]
+
+            if (fieldInternal[x][y] == Cells.FREE.symbol) openCells(x,y)
+        }
+
+        repeatOpenCells(x, east)
+        repeatOpenCells(north, east)
+        repeatOpenCells(north, y)
+        repeatOpenCells(south, y)
+        repeatOpenCells(south, east)
+        repeatOpenCells(x, west)
+        repeatOpenCells(north, west)
+        repeatOpenCells(south, west)
+    } // Chosen free cell open all cells around
+
+    // Show field
     fun printField(internal: Boolean) {
         println("")
         if (internal) {
-            fieldExternal.forEachIndexed { _, row -> println(row.joinToString("")) }
-        } else {
             fieldInternal.forEachIndexed { _, row -> println(row.joinToString("")) }
+        } else {
+            fieldExternal.forEachIndexed { _, row -> println(row.joinToString("")) }
         }
-
-    }
+    } // Show field
 
     fun continueGame(): Boolean {
-
-        val openFieldToString = fieldInternal.joinToString("") { it.joinToString("") }
-        val hiddenFieldToString = fieldExternal.joinToString("") { it.joinToString("") }
-
-        return if (openFieldToString.contains(Cells.MINE.symbol) ||
-            openFieldToString.filter { it == Cells.UNEXPLORED.symbol } !=
-            hiddenFieldToString.filter { it == Cells.MINE.symbol }
-        ) {
-            true
-        } else {
-            println("Congratulations! You found all the mines!")
-            false
+        // If even one mine is unmarked
+        for (i in 0..width) {
+            for (j in 0..height) {
+                if ((fieldExternal[i][j] == Cells.MARKED.symbol && fieldInternal[i][j] != Cells.MINE.symbol) ||
+                    (fieldExternal[i][j] != Cells.MARKED.symbol && fieldInternal[i][j] == Cells.MINE.symbol)
+                ) return true
+            }
         }
+
+        if (fieldInternal.joinToString { it.joinToString("") }.contains(Cells.MINE.symbol) ) {
+            println("Congratulations! You found all the mines!")
+            return false
+        }
+
+        return false
+
+        //
+        for (i in 0..width){
+            for (j in 0..height) {
+                if (fieldInternal[i][j] == 'X') continue
+                if (fieldInternal[i][j] != fieldExternal[i][j]) return true
+            }
+        }
+
     }
 }
 
