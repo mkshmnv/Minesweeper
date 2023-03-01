@@ -127,50 +127,47 @@ class Field {
         when (action) {
             // When command is free
             "free" -> {
-                // Stepped on a marked cell
-                if (fieldInternal[x][y] == Cells.MARKED.symbol) {
-                    makeMove()
-                }
+                when (fieldInternal[x][y]) {
+                    // Stepped on a marked cell
+                    Cells.MARKED.symbol -> makeMove()
 
-                // If cell is a digit
-                if (fieldInternal[x][y].isDigit()) {
-                    if (fieldExternal[x][y].isDigit()) {
-                        // If digit already open
-                        makeMove()
-                    } else {
-                        // If digit isn't open
-                        fieldExternal[x][y] = fieldInternal[x][y]
-                    }
-                }
-
-                // Stepped on a free cell
-                if (fieldInternal[x][y] == Cells.FREE.symbol) {
-                    // If free cell already explored
-                    if (fieldExternal[x][y] == Cells.FREE.symbol) makeMove()
-
-                    // Open all cells around
-                    fieldExternal[x][y] = fieldInternal[x][y]
-                    openCells(x,y)
-
-                    printField(false)
-                }
-
-                // Stepped on a mine
-                if (fieldInternal[x][y] == Cells.MINE.symbol) {
-
-                    // Show all mines on field
-                    for ((xRow, row) in fieldInternal.withIndex()) {
-                        for ((yCol, cell) in row.withIndex()) {
-                            if (cell == Cells.MINE.symbol) fieldExternal[xRow][yCol] = Cells.MINE.symbol
+                    // If cell is a digit
+                    in "12345678" -> {
+                        if (fieldExternal[x][y].isDigit()) { // If digit already open
+                            makeMove()
+                        } else { // If digit isn't open
+                            fieldExternal[x][y] = fieldInternal[x][y]
                         }
                     }
 
-                    printField(false)
+                    // Stepped on a free cell
+                    Cells.FREE.symbol -> {
+                        // If free cell already explored
+                        if (fieldExternal[x][y] == Cells.FREE.symbol) makeMove()
 
-                    println("You stepped on a mine and failed!")
-                    exitProcess(0)
+                        // Open all cells around
+                        fieldExternal[x][y] = fieldInternal[x][y]
+                        openCells(x,y)
+
+                        printField(false)
+                    }
+
+                    // Stepped on a mine (game over)
+                    Cells.MINE.symbol -> {
+
+                        // Show all mines on field
+                        for ((xRow, row) in fieldInternal.withIndex()) {
+                            for ((yCol, cell) in row.withIndex()) {
+                                if (cell == Cells.MINE.symbol) fieldExternal[xRow][yCol] = Cells.MINE.symbol
+                            }
+                        }
+
+                        printField(false)
+
+                        println("You stepped on a mine and failed!")
+                        exitProcess(0)
+                    }
                 }
-
             } // When command is free
 
             // Command set or unset mines marks
