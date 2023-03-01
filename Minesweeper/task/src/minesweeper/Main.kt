@@ -27,8 +27,6 @@ class Field {
     init {
         // Set numbers of mines
         startGame()
-        // TODO exception out of field size
-//        if (numbersMines > width * height || numbersMines < 1) startGame()
 
         // Initialize field with open mines
         fieldInternal = initField(false)
