@@ -9,11 +9,6 @@ enum class Cells(val symbol: Char) {
     MARKED('*')
 }
 
-enum class Mark {
-    MINE,
-    FREE
-}
-
 class Field {
 
     // Parameters field
@@ -24,10 +19,9 @@ class Field {
     // Coordinates
     private var x: Int = 0
     private var y: Int = 0
-    private lateinit var mark: Mark
 
     // Inner fields
-    // TODO implement fieldInternal: List<List<Char>>
+    // TODO implement fieldInternal - could not change the field  -> List<List<Char>>
     private val fieldInternal: List<MutableList<Char>>
     private val fieldExternal: List<MutableList<Char>>
 
@@ -48,13 +42,13 @@ class Field {
         fieldExternal = initField(true)
     }
 
-    private fun initField(isHidden: Boolean): List<MutableList<Char>> {
+    private fun initField(internal: Boolean): List<MutableList<Char>> {
         fun Char.repeat(count: Int): String = this.toString().repeat(count)
 
         var firstString = " │"
         var lastString = "—│"
 
-        val resultField: MutableList<MutableList<Char>> = when (isHidden) {
+        val resultField: MutableList<MutableList<Char>> = when (internal) {
             true -> {
                 val field =
                     Cells.UNEXPLORED.symbol.repeat(width * height) // Create string with needed qty unexplored cells
@@ -131,20 +125,46 @@ class Field {
         // TODO delete Mark enum class
         when (toDo) {
             "free" -> {
-                mark = Mark.FREE
 
+                // Stepped on a mine
                 if (fieldInternal[x][y] == Cells.MINE.symbol) {
-                    printField(true)
+                    printField(false)
                     println("You stepped on a mine and failed!")
                     exitProcess(0)
                 }
 
-                fieldExternal[x][y] = fieldInternal[x][y]
-                openCells(x, y)
+                // Stepped on a marked cell
+                if (fieldInternal[x][y] == Cells.MARKED.symbol) {
+                    makeMove()
+                }
 
-                done = gameOverAllMarked() || gameOverAllShown()
+                // If cell is a digit
+                if (fieldInternal[x][y].isDigit()) {
+                    if (fieldExternal[x][y].isDigit()) {
+                        // If digit already open
+                        makeMove()
+                    } else {
+                        // If digit isn't open
+                        fieldExternal[x][y] = fieldInternal[x][y]
+                    }
+                }
+
+                // Stepped on a free cell
+                if (fieldInternal[x][y] == Cells.FREE.symbol) {
+                    if (fieldExternal[x][y] == Cells.FREE.symbol) {
+                        // If free cell already explored
+                        makeMove()
+                    } else {
+                        // TODO open free cells implement fun openCells()
+//                        openCells(x, y)
+                    }
+                    printField(false)
+                }
+
+//                done = gameOverAllMarked() || gameOverAllShown()
 
             } // When command is free
+
             "mine" -> {
                 when (fieldInternal[x][y]) {
                     in "12345678" -> {
@@ -160,140 +180,15 @@ class Field {
                         fieldExternal[x][y] = Cells.UNEXPLORED.symbol
                     }
                 }
-            } // When command set or unset mines marks
-            else -> makeMove()
-        }
+            } // Command set or unset mines marks
 
-        when (mark) {
-
-            Mark.FREE -> {
-                when {
-                    // If stepped on a mine
-                    fieldInternal[x][y] == Cells.MINE.symbol -> {
-
-                        fieldInternal.forEachIndexed { indexRow, row ->
-                            row.forEachIndexed { indexCell, cell ->
-                                if (cell == Cells.MINE.symbol) {
-                                    fieldExternal[indexRow][indexCell] = Cells.MINE.symbol
-                                }
-                            }
-                        }
-
-                        printField(true)
-
-                        println("You stepped on a mine and failed!")
-
-                        exitProcess(0)
-                    }
-
-                    // If stepped on a marked cell
-                    fieldInternal[x][y] == Cells.MARKED.symbol -> {
-                        makeMove()
-                    }
-
-                    // If stepped on a free cell
-                    fieldInternal[x][y] == Cells.FREE.symbol -> {
-                        if (fieldExternal[x][y] == Cells.FREE.symbol) {
-                            // If free cell already explored
-                            makeMove()
-                        } else {
-                            // If free cell is unexplored
-                            // TODO open all around cells
-
-                            var isAllOpened = true
-
-                            fun openAroundCell(col: Int, row: Int) {
-                                for (i in -1..1) {
-                                    for (j in -1..1) {
-                                        val c = col - i
-                                        val r = row - j
-                                        if (fieldInternal[r][c] == Cells.FREE.symbol) {
-                                            if (fieldExternal[r][c] == '@' ) {
-                                                fieldExternal[r][c] = fieldInternal[r][c]
-                                            } else {
-                                                fieldExternal[r][c] = '@'
-                                            }
-                                        } else {
-                                            fieldExternal[r][c] = fieldInternal[r][c]
-                                        }
-                                    }
-                                }
-                            }
-
-                            while (fieldInternal.joinToString("") { it.joinToString("") }.contains('@')) {
-                                for ((indexRow, row) in fieldExternal.withIndex()) {
-                                    for ((indexCol, symbol) in row.withIndex()) {
-                                        if (symbol == Cells.FREE.symbol) {
-                                            openAroundCell(indexCol, indexRow)
-                                        }
-                                    }
-                                }
-                            }
-
-                            openAroundCell(y, x)
-
-
-
-                            for ((indexRow, row) in fieldExternal.withIndex()) {
-                                for ((indexCol, symbol) in row.withIndex()) {
-                                    if (symbol == Cells.FREE.symbol) {
-                                        openAroundCell(indexCol, indexRow)
-                                    }
-                                }
-                            }
-
-
-//
-//                            fieldExternal[y][x] = fieldInternal[y][x]
-//
-//                            fun clickOnCell(col: Int, row: Int) {
-//                                for (i in -1..1) {
-//                                    for (j in -1..1) {
-//                                        val c = col - i
-//                                        val r = row - j
-//                                        fieldExternal[r][c] = fieldInternal[r][c]
-//                                    }
-//                                }
-//                            }
-//
-//                            fun click() {
-//
-//                                for ((indexRow, row) in fieldExternal.withIndex()) {
-//                                    for ((indexCol, symbol) in row.withIndex()) {
-//                                        if (symbol == Cells.FREE.symbol) {
-//                                            clickOnCell(indexCol, indexRow)
-//                                        }
-//                                    }
-//                                }
-//
-//                            }
-//
-//                            click()
-
-
-                            printField(true)
-                        }
-                    }
-
-                    // If cell is a digit
-                    fieldInternal[x][y].isDigit() -> {
-                        if (fieldExternal[x][y].isDigit()) {
-                            // If digit already open
-                            makeMove()
-                        } else {
-                            // If digit isn't open
-                            fieldExternal[x][y] = fieldInternal[x][y]
-                        }
-                    }
-                }
-            }
-
+            else -> makeMove() // Unknown command
         }
     }
 
-    fun printField(external: Boolean) {
+    fun printField(internal: Boolean) {
         println("")
-        if (external) {
+        if (internal) {
             fieldExternal.forEachIndexed { _, row -> println(row.joinToString("")) }
         } else {
             fieldInternal.forEachIndexed { _, row -> println(row.joinToString("")) }
@@ -324,8 +219,8 @@ fun main() {
 
     // Start game where player enters two numbers as coordinates and command on the field
     do {
-        field.printField(true)
-        field.printField(false) // check i
+        field.printField(false)
+        field.printField(true) // check internal field
         field.makeMove()
     } while (field.continueGame())
 
