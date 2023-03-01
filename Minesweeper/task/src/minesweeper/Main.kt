@@ -1,6 +1,5 @@
 package minesweeper
 
-import kotlin.coroutines.coroutineContext
 import kotlin.system.exitProcess
 
 enum class Cells(val symbol: Char) {
@@ -12,29 +11,24 @@ enum class Cells(val symbol: Char) {
 
 class Field {
 
-    // Parameters field
-    private var width: Int
-    private var height: Int
-    private var qtyMines: Int
+    // Set parameters field
+    private var width: Int = 9
+    private var height: Int = 9
+    private var numbersMines: Int = 0
 
     // Coordinates cells
     private var x: Int = 0
     private var y: Int = 0
 
     // Inner fields
-    // TODO implement fieldInternal - could not change the field  -> List<List<Char>>
     private val fieldInternal: List<MutableList<Char>>
     private val fieldExternal: List<MutableList<Char>>
 
     init {
-        print("How many mines do you want on the field? ")
-        // TODO fix if (NULL)
-        // TODO fix if qty > cells on field
-        qtyMines = readln().toInt()
-
-        // Set field size
-        width = 9
-        height = 9
+        // Set numbers of mines
+        startGame()
+        // TODO exception out of field size
+//        if (numbersMines > width * height || numbersMines < 1) startGame()
 
         // Initialize field with open mines
         fieldInternal = initField(false)
@@ -68,7 +62,7 @@ class Field {
 
             false -> {
                 val field =
-                    (Cells.FREE.symbol.repeat(width * height - qtyMines) + Cells.MINE.symbol.repeat(qtyMines)) // Create string with needed qty chars, with mines and explored marked cells
+                    (Cells.FREE.symbol.repeat(width * height - numbersMines) + Cells.MINE.symbol.repeat(numbersMines)) // Create string with needed qty chars, with mines and explored marked cells
                         .toList().shuffled() // shuffled chars
                         .chunked(width) // split string to lists
                         .map { it.toMutableList() }.toMutableList()
@@ -117,6 +111,11 @@ class Field {
         return resultField
     }
 
+    private fun startGame() {
+        print("How many mines do you want on the field? ")
+        numbersMines = readln().toIntOrNull() ?: (width * height)
+        if (numbersMines > width * height || numbersMines < 1) startGame()
+    }
     fun makeMove() {
         print("Set/unset mine marks or claim a cell as free: ")
         val (xInput, yInput, action) = readln().split(" ")
@@ -131,13 +130,13 @@ class Field {
                     // Stepped on a marked cell
                     Cells.MARKED.symbol -> makeMove()
 
-                    // If cell is a digit
+                    // Stepped on a digit
                     in "12345678" -> {
-                        if (fieldExternal[x][y].isDigit()) { // If digit already open
-                            makeMove()
-                        } else { // If digit isn't open
-                            fieldExternal[x][y] = fieldInternal[x][y]
-                        }
+                        // Digit already open
+                        if (fieldExternal[x][y].isDigit()) makeMove()
+
+                        // Digit isn't open
+                        fieldExternal[x][y] = fieldInternal[x][y]
                     }
 
                     // Stepped on a free cell
@@ -173,16 +172,19 @@ class Field {
             // Command set or unset mines marks
             "mine" -> {
                 when (fieldExternal[x][y]) {
+                    // Stepped on a digit
                     in "12345678" -> {
                         println("There is a number here!")
                         makeMove()
                     }
 
+                    // Set cell
                     Cells.UNEXPLORED.symbol -> {
                         fieldExternal[x][y] = Cells.MARKED.symbol
                         if (fieldInternal[x][y] == Cells.MINE.symbol) fieldInternal[x][y] = Cells.MARKED.symbol
                     }
 
+                    // Unset cell
                     Cells.MARKED.symbol -> {
                         fieldExternal[x][y] = Cells.UNEXPLORED.symbol
                         if (fieldInternal[x][y] == Cells.MARKED.symbol) fieldInternal[x][y] = Cells.MINE.symbol
@@ -190,7 +192,8 @@ class Field {
                 }
             } // Command set or unset mines marks
 
-            else -> makeMove() // Unknown command
+            // Unknown command
+            else -> makeMove()
         }
     }
 
