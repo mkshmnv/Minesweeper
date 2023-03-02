@@ -1,4 +1,12 @@
-<p><b><a href="https://hyperskill.org/tracks/18" target="_blank">Minesweeper</a> (Kotlin) is a graduate project.</p></b>
+<p><b><a href="https://hyperskill.org/tracks/18" target="_blank">Minesweeper</a> (Kotlin) is a graduate project in track <a href="https://hyperskill.org/tracks/18" target="_blank">Kotlin Basics</a> on <a href="https://hyperskill.org/tracks/18" target="_blank">hyperskill</a> portal.</p></b>
+
+When writing this project, implemented the Singleton pattern<br>
+As well as principles such as DRY, KISS, YAGNI<br>
+And some SOLID principles<br>
+<br>
+<br>
+<br>
+<b>What is <a href="https://hyperskill.org/tracks/18" target="_blank">Minesweeper</a> project</b><br>
 Description from hyperskill portal<br>
 Project contains core topics for track Kotlin Basics.<br>
 Apply core topics in project stages.<br>
@@ -6,6 +14,7 @@ Apply core topics in project stages.<br>
 Learning outcomes<br>
 This project will teach you how to work with lists in Kotlin.<br>
 You will be dealing with algorithms for generating the minefield and processing the player moves.<br>
+<br>
 <br>
 <p><b>What is track <a href="https://hyperskill.org/tracks/18" target="_blank">Kotlin Basics</a></p></b>
 Description from hyperskill portal<br>
