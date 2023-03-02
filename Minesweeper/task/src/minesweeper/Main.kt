@@ -1,7 +1,5 @@
 package minesweeper
 
-import kotlin.system.exitProcess
-
 class Field {
     enum class Cells(val symbol: Char) {
         UNEXPLORED('.'),
@@ -11,8 +9,8 @@ class Field {
     }
 
     // Set parameters field
-    private var width: Int = 9
-    private var height: Int = 9
+    private var width: Int
+    private var height: Int
     private var numbersMines: Int = 0
 
     // Coordinates cells
@@ -24,6 +22,11 @@ class Field {
     private val fieldExternal: List<MutableList<Char>>
 
     init {
+
+        // Set size field
+        width = 9
+        height = 9
+
         // Set numbers of mines
         startGame()
 
@@ -113,6 +116,7 @@ class Field {
         numbersMines = readln().toIntOrNull() ?: (width * height)
         if (numbersMines > width * height || numbersMines < 1) startGame()
     }
+
     fun makeMove() {
         print("Set/unset mine marks or claim a cell as free: ")
         val (xInput, yInput, action) = readln().split(" ")
@@ -143,7 +147,7 @@ class Field {
 
                         // Open all cells around
                         fieldExternal[x][y] = fieldInternal[x][y]
-                        openCells(x,y)
+                        openCells(x, y)
 
                         printField(false)
                     }
@@ -161,7 +165,6 @@ class Field {
                         printField(false)
 
                         println("You stepped on a mine and failed!")
-                        exitProcess(0)
                     }
                 }
             } // When command is free
@@ -203,15 +206,15 @@ class Field {
         val west = y - 1
 
         // Around cells have safe cells? Open them all
-        fun repeatOpenCells (x: Int, y: Int) {
+        fun repeatOpenCells(x: Int, y: Int) {
             if (fieldInternal[x][y] == Cells.MINE.symbol ||
                 fieldExternal[x][y] == Cells.FREE.symbol ||
                 fieldExternal[x][y].isDigit()
-                ) return
+            ) return
 
             fieldExternal[x][y] = fieldInternal[x][y]
 
-            if (fieldInternal[x][y] == Cells.FREE.symbol) openCells(x,y)
+            if (fieldInternal[x][y] == Cells.FREE.symbol) openCells(x, y)
         }
 
         repeatOpenCells(x, east)
@@ -235,18 +238,22 @@ class Field {
     } // Show field
 
     fun continueGame(): Boolean {
-        // If even one mine is unmarked TODO fix continue
-        if (fieldExternal.joinToString { it.joinToString("") }.count { it == Cells.MARKED.symbol } == numbersMines) {
-            for ((rowIndex, row) in fieldInternal.withIndex()) {
-                for (colIndex in row.indices) {
-                    return if (fieldExternal[rowIndex][colIndex] == Cells.MARKED.symbol &&
-                        fieldInternal[rowIndex][colIndex] != Cells.MARKED.symbol) {
-                        true
-                    } else {
-                        printField(false)
-                        println("Congratulations! You found all the mines!")
-                        false
-                    }
+
+        fun endGame() : Boolean {
+            printField(false)
+            println("Congratulations! You found all the mines!")
+            return false
+        }
+
+        for (row in 0 until width) {
+            for (col in 0 until height) {
+
+                if ((fieldExternal[row][col] == Cells.MARKED.symbol && fieldInternal[row][col] != Cells.MINE.symbol) ||
+                    (fieldExternal[row][col] != Cells.MARKED.symbol && fieldInternal[row][col] == Cells.MINE.symbol) ||
+                    fieldInternal[row][col] != fieldExternal[row][col]) {
+                    return endGame()
+                } else if (fieldInternal[row][col] == Cells.MINE.symbol) {
+                     continue
                 }
             }
         }
@@ -261,8 +268,7 @@ fun main() {
     // Start game where player enters two numbers as coordinates and command on the field
     do {
         field.printField(false)
-        field.printField(true) // check internal field
+//        field.printField(true) // check internal field
         field.makeMove()
     } while (field.continueGame())
-
 }
